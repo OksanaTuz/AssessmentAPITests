@@ -65,7 +65,7 @@
     <Compile Include="DTOs\Employee\EmployeeGetAllResponceDto.cs" />
     <Compile Include="DTOs\Employee\EmployeeGetByIdResponceDto.cs" />
     <Compile Include="DTOs\Employee\EmployeesCreateRequestDto.cs" />
-    <Compile Include="DTOs\Employee\EmployeesDto.cs" />
+    <Compile Include="DTOs\Employee\EmployeeDto.cs" />
     <Compile Include="HttpClientCreator.cs" />
     <Compile Include="HttpRequestMessageCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

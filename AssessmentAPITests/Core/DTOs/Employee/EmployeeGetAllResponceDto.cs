@@ -4,6 +4,6 @@ namespace Core.DTOs.Employee
 {
     public class EmployeeGetAllResponceDto
     {
-        public List<EmployeesDto> Employees { get; set; }
+        public List<EmployeeDto> Employees { get; set; }
     }
 }

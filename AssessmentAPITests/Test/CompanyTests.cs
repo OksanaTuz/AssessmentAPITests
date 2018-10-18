@@ -53,7 +53,7 @@ namespace Test
 
             //assert
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
-                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK));
+                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Company isn't created");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No companies");
             }
@@ -80,7 +80,7 @@ namespace Test
             //assert
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
-                Assert.IsFalse(result.Equals("[]"), "No companies are exist");
+                Assert.IsFalse(result.Equals("[]"), "No companies");
                 var company = JsonConvert.DeserializeObject<CompanyGetAllResponceDto>(result).Conpanies.FirstOrDefault();
                 Assert.IsTrue(company.Name.Equals("TestCompany"));
             }
