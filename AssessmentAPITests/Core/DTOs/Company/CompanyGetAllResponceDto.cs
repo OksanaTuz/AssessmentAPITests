@@ -4,6 +4,6 @@ namespace Core.DTOs.Company
 {
     public class CompanyGetAllResponceDto
     {
-       public List<CompanyDto> Conpanies { get; set; }
+       public IList<CompanyDto> Conpanies { get; set; }
     }
 }

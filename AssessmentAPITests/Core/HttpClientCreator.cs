@@ -27,10 +27,9 @@ namespace Core
             {
                 ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true
             };
-
             return new HttpClient(handler)
             {
-                BaseAddress = new Uri(Settings.ApiBasePath + "/token")
+                BaseAddress = new Uri(Settings.ApiBasePath)
             };
         }
     }
