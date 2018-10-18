@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -44,18 +45,51 @@ namespace Test
         public async Task CreateCompany()
         {
             //arrange
-            var companyName = "TestCompany";
+            var companyName = TestUtils.GenerateString(10);
+            using (var requestMessage = new HttpRequestMessageCreator().PostRequestMessageCreateCompany("/TestApi/api/automation/companies", companyName))
+            {
+                //act
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+
+                    //assert
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
+                    Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Company isn't created");
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task TryToCreateCompanyWithTheSameNameAsOneOfExisting()
+        {
+            //arrange
+            var companyName = TestUtils.GenerateString(10);
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateCompany("/TestApi/api/automation/companies", companyName))
+            {
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+                }
+            }
 
             //act
-            using (var responce = await _client.GetAsync($"/TestApi/api/automation/companies?name={companyName}")
-                .ConfigureAwait(false))
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateCompany("/TestApi/api/automation/companies", companyName))
             {
-
-            //assert
-                Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
-                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Company isn't created");
-                var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
-                Assert.IsFalse(result.Equals("[]"), "No companies");
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+             //assert
+                    Assert.AreEqual(HttpStatusCode.BadRequest, responce.StatusCode);
+                    var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Assert.IsTrue(result.Equals("Duplicate results found for identifier."), "Company duplicate is created");
+                }
             }
         }
 
@@ -63,26 +97,28 @@ namespace Test
         public async Task GetAllCompanies()
         {
             //arrange
-            var companyName = "TestCompany";
-            using (var responce = await _client.GetAsync($"/TestApi/api/automation/companies?name={companyName}")
-                .ConfigureAwait(false))
+            var companyName = TestUtils.GenerateString(10);
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateCompany("/TestApi/api/automation/companies", companyName))
             {
-                Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
-                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Company isn't created");
-                var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
-                Assert.IsFalse(result.Equals("[]"), "No companies");
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+                }
             }
 
             //act
-            using (var responce = await _client.GetAsync("/TestApi/api/automation/companies").ConfigureAwait(false))
+                using (var responce = await _client.GetAsync("/TestApi/api/automation/companies").ConfigureAwait(false))
             {
 
             //assert
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No companies");
-                var company = JsonConvert.DeserializeObject<CompanyGetAllResponceDto>(result).Conpanies.FirstOrDefault();
-                Assert.IsTrue(company.Name.Equals("TestCompany"));
+                var company = JsonConvert.DeserializeObject<IList<CompanyDto>>(result).Last();
+                Assert.IsTrue(company.Name.Equals(companyName));
             }
         }
 
@@ -99,7 +135,7 @@ namespace Test
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No companies");
-                var company = JsonConvert.DeserializeObject<CompanyDto>(result);
+                var company = JsonConvert.DeserializeObject<IList<CompanyDto>>(result).FirstOrDefault();
                 companyId = company.Id;
                 companyName = company.Name;
             }
@@ -127,7 +163,7 @@ namespace Test
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No companies");
-                var company = JsonConvert.DeserializeObject<CompanyGetAllResponceDto>(result).Conpanies.FirstOrDefault();
+                var company = JsonConvert.DeserializeObject<IList<CompanyDto>>(result).FirstOrDefault();
                 companyId = company.Id;
             }
 

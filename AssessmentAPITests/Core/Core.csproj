@@ -59,17 +59,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\AccessToken\GetAccessTokenResponceDto.cs" />
+    <Compile Include="DTOs\Company\CompanyCreateRequestDto .cs" />
     <Compile Include="DTOs\Company\CompanyDto.cs" />
-    <Compile Include="DTOs\Company\CompanyGetAllResponceDto.cs" />
     <Compile Include="DTOs\Company\CompanyGetByIdResponceDto.cs" />
-    <Compile Include="DTOs\Employee\EmployeeGetAllResponceDto.cs" />
     <Compile Include="DTOs\Employee\EmployeeGetByIdResponceDto.cs" />
-    <Compile Include="DTOs\Employee\EmployeesCreateRequestDto.cs" />
+    <Compile Include="DTOs\Employee\EmployeeCreateRequestDto.cs" />
     <Compile Include="DTOs\Employee\EmployeeDto.cs" />
     <Compile Include="HttpClientCreator.cs" />
     <Compile Include="HttpRequestMessageCreator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings.cs" />
+    <Compile Include="TestUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

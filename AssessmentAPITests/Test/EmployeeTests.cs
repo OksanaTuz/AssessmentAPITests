@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -43,18 +44,51 @@ namespace Test
         public async Task CreateEmployee()
         {
             //arrange
-            var employeeName = "TestEmployee";
+            var employeeName = TestUtils.GenerateString(10);
+            using (var requestMessage = new HttpRequestMessageCreator().PostRequestMessageCreateEmployee("/TestApi/api/automation/employees", employeeName))
+            {
+                //act
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+
+                    //assert
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
+                    Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Employee isn't created");
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task TryToCreateEmployeeWithTheSameNameAsOneOfExisting()
+        {
+            //arrange
+            var employeeName = TestUtils.GenerateString(10);
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateEmployee("/TestApi/api/automation/employees", employeeName))
+            {
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+                }
+            }
 
             //act
-            using (var responce = await _client.GetAsync($"/TestApi/api/automation/employees?name={employeeName}")
-                .ConfigureAwait(false))
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateEmployee("/TestApi/api/automation/employees", employeeName))
             {
-
-                //assert
-                Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
-                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Employee isn't created");
-                var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
-                Assert.IsFalse(result.Equals("[]"), "No employees");
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+                    //assert
+                    Assert.AreEqual(HttpStatusCode.BadRequest, responce.StatusCode);
+                    var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    Assert.IsTrue(result.Equals("Duplicate results found for identifier."), "Employee duplicate is created");
+                }
             }
         }
 
@@ -62,16 +96,16 @@ namespace Test
         public async Task GetAllEmployees()
         {
             //arrange
-            var employeeName = "TestEmployee";
-
-            //act
-            using (var responce = await _client.GetAsync($"/TestApi/api/automation/employees?name={employeeName}")
-                .ConfigureAwait(false))
+            var employeeName = TestUtils.GenerateString(10);
+            using (var requestMessage =
+                new HttpRequestMessageCreator().PostRequestMessageCreateEmployee("/TestApi/api/automation/employees", employeeName))
             {
-                Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
-                Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.OK), "Employee isn't created");
-                var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
-                Assert.IsFalse(result.Equals("[]"), "No employees");
+                using (var responce = await _client.SendAsync(requestMessage)
+                    .ConfigureAwait(false))
+                {
+                    Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode,
+                        "Internal server error");
+                }
             }
 
             //act
@@ -82,8 +116,8 @@ namespace Test
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No employees");
-                var employee = JsonConvert.DeserializeObject<EmployeeGetAllResponceDto>(result).Employees.FirstOrDefault();
-                Assert.IsTrue(employee.Name.Equals("TestEmployee"));
+                var employee = JsonConvert.DeserializeObject<List<EmployeeDto>>(result).Last();
+                Assert.IsTrue(employee.Name.Equals(employeeName));
             }
         }
 
@@ -100,7 +134,7 @@ namespace Test
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No employees");
-                var employee = JsonConvert.DeserializeObject<EmployeeDto>(result);
+                var employee = JsonConvert.DeserializeObject<List<EmployeeDto>>(result).Last();
                 employeeId = employee.Id;
                 employeeName = employee.Name;
             }
@@ -128,7 +162,7 @@ namespace Test
                 Assert.AreNotEqual(HttpStatusCode.InternalServerError, responce.StatusCode, "Internal server error");
                 var result = await responce.Content.ReadAsStringAsync().ConfigureAwait(false);
                 Assert.IsFalse(result.Equals("[]"), "No eployees");
-                var employee = JsonConvert.DeserializeObject<EmployeeGetAllResponceDto>(result).Employees.FirstOrDefault();
+                var employee = JsonConvert.DeserializeObject<List<EmployeeDto>>(result).FirstOrDefault();
                 employeeId = employee.Id;
             }
 
@@ -150,8 +184,8 @@ namespace Test
         [TestMethod]
         public async Task DeleteEmployeeByIdWithInvalidId()
         {
-            var companyId = 100;
-            var responce = await _client.DeleteAsync($"/TestApi/api/automation/employees/id/{companyId}").ConfigureAwait(false);
+            var employeeId = 1000;
+            var responce = await _client.DeleteAsync($"/TestApi/api/automation/employees/id/{employeeId}").ConfigureAwait(false);
             Assert.IsTrue(responce.StatusCode.Equals(HttpStatusCode.NotFound));
         }
     }

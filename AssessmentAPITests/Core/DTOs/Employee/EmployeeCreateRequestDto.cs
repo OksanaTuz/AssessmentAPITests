@@ -1,6 +1,6 @@
 ﻿namespace Core.DTOs.Employee
 {
-    public class EmployeesCreateRequestDto
+    public class EmployeeCreateRequestDto
     {
         public string Name { get; set; }
     }
